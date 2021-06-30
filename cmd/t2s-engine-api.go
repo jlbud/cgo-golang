@@ -52,6 +52,9 @@ func main() {
 		if c == io.EOF {
 			break
 		}
+		if len(string(data)) == 0 {
+			continue
+		}
 		count++
 		if count == countTotal {
 			t.Process(string(data), 1)
