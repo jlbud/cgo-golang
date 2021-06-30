@@ -50,11 +50,7 @@ func (t *T2SModel) Process(input string, endFlag int) (output string) {
 }
 
 func (t *T2SModel) Destroy() error {
-	rec := C.UnloadUserRules(t.h)
-	if rec != 0 {
-		return fmt.Errorf("T2SModel UnloadUserRules fail: code:%d", rec)
-	}
-	rec = C.TerminateT2sInstance(&t.h)
+	rec := C.TerminateT2sInstance(&t.h)
 	if rec != 0 {
 		return fmt.Errorf("T2SModel TerminateT2sInstance fail: code:%d", rec)
 	}
@@ -72,6 +68,14 @@ func (t *T2SModel) LoadUserRules(userDictPath string, size int) error {
 	rec := C.LoadUserRules(t.userDictPath, t.size, t.h)
 	if rec != 0 {
 		return fmt.Errorf("T2SModel LoadUserRules fail: code:%d", rec)
+	}
+	return nil
+}
+
+func (t *T2SModel) UnLoadUserRules() error {
+	rec := C.UnloadUserRules(t.h)
+	if rec != 0 {
+		return fmt.Errorf("T2SModel UnloadUserRules fail: code:%d", rec)
 	}
 	return nil
 }
