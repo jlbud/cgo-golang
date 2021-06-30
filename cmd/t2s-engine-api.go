@@ -45,9 +45,9 @@ func main() {
 	}()
 	countTotal, _ := StatsCount(cfg.FileName)
 	count := 0
-	output := ""
 	br := bufio.NewReader(f)
 	for {
+		output := ""
 		data, _, c := br.ReadLine()
 		if c == io.EOF {
 			break
@@ -58,9 +58,9 @@ func main() {
 		fmt.Println("json: ", string(data))
 		count++
 		if count == countTotal {
-			t.Process(string(data), 1)
+			output = t.Process(string(data), 1)
 		} else {
-			t.Process(string(data), 0)
+			output = t.Process(string(data), 0)
 		}
 		fmt.Println("output data is ", output)
 	}
