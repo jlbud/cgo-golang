@@ -41,12 +41,15 @@ func CreateInstance(modelPath string) (*T2SModel, error) {
 	return b, nil
 }
 
-func (t *T2SModel) Process(input string, endFlag int) (output string) {
+func (t *T2SModel) Process(input string, endFlag int) (output string, err error) {
 	var out *C.char
 	in := C.CString(input)
 	defer C.free(unsafe.Pointer(in)) // TODO
-	C.T2sProcess(t.h, in, (C.int)(endFlag), &out)
-	return C.GoString(out)
+	rec := C.T2sProcess(t.h, in, (C.int)(endFlag), &out)
+	if rec != 0 {
+		return "", fmt.Errorf("T2SModel Process fail code:%d", rec)
+	}
+	return C.GoString(out), nil
 }
 
 func (t *T2SModel) Destroy() error {

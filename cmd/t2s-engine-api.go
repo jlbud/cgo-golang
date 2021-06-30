@@ -55,14 +55,19 @@ func main() {
 		if len(string(data)) == 0 {
 			continue
 		}
-		fmt.Println("json: ", string(data))
+		fmt.Printf("input json:\n%s\n", string(data))
 		count++
 		if count == countTotal {
-			output = t.Process(string(data), 1)
+			output, err = t.Process(string(data), 1)
 		} else {
-			output = t.Process(string(data), 0)
+			output, err = t.Process(string(data), 0)
 		}
-		fmt.Println("output data is ", output)
+		if err != nil {
+			fmt.Printf("Process err:%v\n", err)
+			return
+		}
+		fmt.Printf("output data is:\n%s\n", output)
+		fmt.Printf("\n")
 	}
 }
 
