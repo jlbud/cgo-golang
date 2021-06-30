@@ -1,7 +1,7 @@
 package engine
 
 /*
-#cgo LDFLAGS: -L ./libs
+#cgo LDFLAGS: -L ./libs -lt2s
 #include<stdlib.h>
 #include<string.h>
 #include <string.h>
@@ -22,7 +22,7 @@ type T2SModel struct {
 
 type UserRules struct {
 	userDictPath *C.char // user dict path
-	size         *C.int
+	size         C.int
 	inFile       *C.char // user themself make rules file
 	outFile      *C.char // user themself make rules model file
 }
