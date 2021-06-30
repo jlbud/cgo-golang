@@ -23,8 +23,8 @@ func main() {
 		fmt.Printf("clop err:%v\n", err)
 		return
 	}
-	fmt.Println("filename", cfg.FileName)
-	fmt.Println("model", cfg.Model)
+	fmt.Println("cfg filename is ", cfg.FileName)
+	fmt.Println("cfg model is ", cfg.Model)
 
 	f, err := os.Open(cfg.FileName)
 	if err != nil {
@@ -32,7 +32,10 @@ func main() {
 		return
 	}
 	defer f.Close()
-	t := engine.CreateInstance(cfg.Model)
+	t, err := engine.CreateInstance(cfg.Model)
+	if err != nil {
+		fmt.Printf("CreateInstance err:%v\n", err)
+	}
 	defer func() {
 		err := t.Destroy()
 		if err != nil {

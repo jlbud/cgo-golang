@@ -27,18 +27,18 @@ type UserRules struct {
 	outFile      *C.char // user themself make rules model file
 }
 
-func CreateInstance(modelPath string) *T2SModel {
+func CreateInstance(modelPath string) (*T2SModel, error) {
 	b := &T2SModel{}
 	b.modelPath = C.CString(modelPath)
 	rec := C.LoadT2sModel(b.modelPath, &b.b)
 	if rec != 0 {
-		return nil
+		return nil, fmt.Errorf("T2SModel LoadT2sModel fail code:%d", rec)
 	}
 	rec = C.InitializeT2sInstance(b.b, &b.h)
 	if rec != 0 {
-		return nil
+		return nil, fmt.Errorf("T2SModel InitializeT2sInstance fail code:%d", rec)
 	}
-	return b
+	return b, nil
 }
 
 func (t *T2SModel) Process(input string, endFlag int) (output string) {
@@ -52,11 +52,11 @@ func (t *T2SModel) Process(input string, endFlag int) (output string) {
 func (t *T2SModel) Destroy() error {
 	rec := C.TerminateT2sInstance(&t.h)
 	if rec != 0 {
-		return fmt.Errorf("T2SModel TerminateT2sInstance fail: code:%d", rec)
+		return fmt.Errorf("T2SModel TerminateT2sInstance fail code:%d", rec)
 	}
 	rec = C.UnloadT2sModel(&t.b)
 	if rec != 0 {
-		return fmt.Errorf("T2SModel UnloadT2sModel fail: code:%d", rec)
+		return fmt.Errorf("T2SModel UnloadT2sModel fail code:%d", rec)
 	}
 	C.free(unsafe.Pointer(t.modelPath))
 	return nil
@@ -67,7 +67,7 @@ func (t *T2SModel) LoadUserRules(userDictPath string, size int) error {
 	t.size = C.int(size)
 	rec := C.LoadUserRules(t.userDictPath, t.size, t.h)
 	if rec != 0 {
-		return fmt.Errorf("T2SModel LoadUserRules fail: code:%d", rec)
+		return fmt.Errorf("T2SModel LoadUserRules fail code:%d", rec)
 	}
 	return nil
 }
@@ -75,7 +75,7 @@ func (t *T2SModel) LoadUserRules(userDictPath string, size int) error {
 func (t *T2SModel) UnLoadUserRules() error {
 	rec := C.UnloadUserRules(t.h)
 	if rec != 0 {
-		return fmt.Errorf("T2SModel UnloadUserRules fail: code:%d", rec)
+		return fmt.Errorf("T2SModel UnloadUserRules fail code:%d", rec)
 	}
 	return nil
 }
@@ -90,7 +90,7 @@ func (t *T2SModel) GetVersion() string {
 //	t.outFile = C.CString(outFile)
 //	rec := C.MakeT2sModel(t.inFile, t.outFile)
 //	if rec != 0 {
-//		return fmt.Errorf("T2SModel MakeT2sModel fail: code:%d", rec)
+//		return fmt.Errorf("T2SModel MakeT2sModel fail code:%d", rec)
 //	}
 //	return nil
 //}
