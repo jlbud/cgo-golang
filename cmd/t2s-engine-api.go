@@ -55,6 +55,7 @@ func main() {
 		if len(string(data)) == 0 {
 			continue
 		}
+		fmt.Println("json: ", string(data))
 		count++
 		if count == countTotal {
 			t.Process(string(data), 1)
