@@ -31,19 +31,19 @@ func main() {
 		return
 	}
 	defer f.Close()
-	b, err := engine.CreatePostBaseHandle(cfg.Model)
+	pb, err := engine.CreatePostBase(cfg.Model)
 	if err != nil {
 		fmt.Printf("CreatePostBaseHandle err:%v\n", err)
 		return
 	}
 	defer func() {
-		err := b.Destroy()
+		err := pb.Destroy()
 		if err != nil {
 			fmt.Printf("Destroy err:%v\n", err)
 			return
 		}
 	}()
-	ps, err := engine.CreatePostSession(b)
+	ps, err := pb.CreateSession()
 	if err != nil {
 		fmt.Printf("CreatePostSession err:%v\n", err)
 		return

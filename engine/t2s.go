@@ -13,32 +13,42 @@ import (
 	"unsafe"
 )
 
-type PostBaseHandle struct {
+type PostBase struct {
 	b         unsafe.Pointer // base handle
 	modelPath *C.char
 }
 
-func CreatePostBaseHandle(modelPath string) (*PostBaseHandle, error) {
-	p := &PostBaseHandle{}
-	p.modelPath = C.CString(modelPath)
-	rec := C.LoadT2sModel(p.modelPath, &p.b)
+func CreatePostBase(modelPath string) (*PostBase, error) {
+	pb := &PostBase{
+		modelPath: C.CString(modelPath),
+	}
+	rec := C.LoadT2sModel(pb.modelPath, &pb.b)
 	if rec != 0 {
 		return nil, fmt.Errorf("PostBaseHandle LoadT2sModel fail code:%d", rec)
 	}
-	return p, nil
+	return pb, nil
 }
 
-type PostSession struct {
-	h unsafe.Pointer // handle
+func (pb *PostBase) Destroy() error {
+	rec := C.UnloadT2sModel(&pb.b)
+	if rec != 0 {
+		return fmt.Errorf("PostBaseHandle UnloadT2sModel fail code:%d", rec)
+	}
+	C.free(unsafe.Pointer(pb.modelPath))
+	return nil
 }
 
-func CreatePostSession(bashHandle *PostBaseHandle) (*PostSession, error) {
-	ps := &PostSession{}
-	rec := C.InitializeT2sInstance(bashHandle.b, &ps.h)
+func (pb *PostBase) CreateSession() (*PostSession, error) {
+	ps := new(PostSession)
+	rec := C.InitializeT2sInstance(pb.b, &ps.h)
 	if rec != 0 {
 		return nil, fmt.Errorf("PostSession InitializeT2sInstance fail code:%d", rec)
 	}
 	return ps, nil
+}
+
+type PostSession struct {
+	h unsafe.Pointer // handle
 }
 
 func (ps *PostSession) Process(input string, endFlag int) (output string, err error) {
@@ -52,19 +62,10 @@ func (ps *PostSession) Process(input string, endFlag int) (output string, err er
 	return C.GoString(out), nil
 }
 
-func (pb *PostSession) Reset() error {
-	rec := C.T2sReset(pb.h)
+func (ps *PostSession) Reset() error {
+	rec := C.T2sReset(ps.h)
 	if rec != 0 {
 		return fmt.Errorf("PostSession T2sReset fail code:%d", rec)
 	}
-	return nil
-}
-
-func (pb *PostBaseHandle) Destroy() error {
-	rec := C.UnloadT2sModel(&pb.b)
-	if rec != 0 {
-		return fmt.Errorf("PostBaseHandle UnloadT2sModel fail code:%d", rec)
-	}
-	C.free(unsafe.Pointer(pb.modelPath))
 	return nil
 }
