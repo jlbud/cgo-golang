@@ -62,11 +62,7 @@ func main() {
 		}
 		fmt.Printf("input json:\n%s\n", string(data))
 		count++
-		fmt.Println("count is:", count)
-		fmt.Println("countTotal is:", countTotal)
-		fmt.Printf("\n\n")
 		if count == countTotal {
-			fmt.Println("count and countTotal be equal")
 			output, err = ps.Process(string(data), 1)
 		} else {
 			output, err = ps.Process(string(data), 0)
