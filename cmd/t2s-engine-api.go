@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"cgo-golang/engine"
 	"fmt"
 	"github.com/guonaihong/clop"
@@ -32,18 +31,24 @@ func main() {
 		return
 	}
 	defer f.Close()
-	t, err := engine.CreateInstance(cfg.Model)
+	b, err := engine.CreatePostBaseHandle(cfg.Model)
 	if err != nil {
-		fmt.Printf("CreateInstance err:%v\n", err)
+		fmt.Printf("CreatePostBaseHandle err:%v\n", err)
+		return
 	}
 	defer func() {
-		err := t.Destroy()
+		err := b.Destroy()
 		if err != nil {
 			fmt.Printf("Destroy err:%v\n", err)
 			return
 		}
 	}()
-	countTotal, _ := StatsCount(cfg.FileName)
+	ps, err := engine.CreatePostSession(b)
+	if err != nil {
+		fmt.Printf("CreatePostSession err:%v\n", err)
+		return
+	}
+	countTotal := StatsCount(cfg.FileName)
 	count := 0
 	br := bufio.NewReader(f)
 	for {
@@ -52,15 +57,19 @@ func main() {
 		if c == io.EOF {
 			break
 		}
-		if len(string(data)) == 0 {
+		if len(data) == 0 {
 			continue
 		}
 		fmt.Printf("input json:\n%s\n", string(data))
 		count++
+		fmt.Println("count is:", count)
+		fmt.Println("countTotal is:", countTotal)
+		fmt.Printf("\n\n")
 		if count == countTotal {
-			output, err = t.Process(string(data), 1)
+			fmt.Println("count and countTotal be equal")
+			output, err = ps.Process(string(data), 1)
 		} else {
-			output, err = t.Process(string(data), 0)
+			output, err = ps.Process(string(data), 0)
 		}
 		if err != nil {
 			fmt.Printf("Process err:%v\n", err)
@@ -71,24 +80,24 @@ func main() {
 	}
 }
 
-func StatsCount(fileName string) (c int, err error) {
+func StatsCount(fileName string) int {
 	fi, err := os.Open(fileName)
 	if err != nil {
-		fmt.Printf("open file err: %s\n", err)
-		return
+		fmt.Printf("StatsCount open file err: %s\n", err)
+		return 0
 	}
-	// 32K cache
-	buf := make([]byte, 32*1024)
-	count := 1
-	lineSep := []byte{'\n'}
+	defer fi.Close()
+	reader := bufio.NewReader(fi)
+	count := 0
 	for {
-		c, err := fi.Read(buf)
-		count += bytes.Count(buf[:c], lineSep)
-		switch {
-		case err == io.EOF:
-			return count, nil
-		case err != nil:
-			return count, err
+		str, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
 		}
+		if len(str) == 0 {
+			continue
+		}
+		count++
 	}
+	return count
 }

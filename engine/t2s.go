@@ -13,87 +13,58 @@ import (
 	"unsafe"
 )
 
-type T2SModel struct {
+type PostBaseHandle struct {
 	b         unsafe.Pointer // base handle
-	h         unsafe.Pointer // handle
 	modelPath *C.char
-	UserRules
 }
 
-type UserRules struct {
-	userDictPath *C.char // user dict path
-	size         C.int
-	inFile       *C.char // user themself make rules file
-	outFile      *C.char // user themself make rules model file
-}
-
-func CreateInstance(modelPath string) (*T2SModel, error) {
-	b := &T2SModel{}
-	b.modelPath = C.CString(modelPath)
-	rec := C.LoadT2sModel(b.modelPath, &b.b)
+func CreatePostBaseHandle(modelPath string) (*PostBaseHandle, error) {
+	p := &PostBaseHandle{}
+	p.modelPath = C.CString(modelPath)
+	rec := C.LoadT2sModel(p.modelPath, &p.b)
 	if rec != 0 {
 		return nil, fmt.Errorf("T2SModel LoadT2sModel fail code:%d", rec)
 	}
-	rec = C.InitializeT2sInstance(b.b, &b.h)
+	return p, nil
+}
+
+type PostSession struct {
+	h unsafe.Pointer // handle
+}
+
+func CreatePostSession(bashHandle *PostBaseHandle) (*PostSession, error) {
+	ps := &PostSession{}
+	rec := C.InitializeT2sInstance(bashHandle.b, &ps.h)
 	if rec != 0 {
 		return nil, fmt.Errorf("T2SModel InitializeT2sInstance fail code:%d", rec)
 	}
-	return b, nil
+	return ps, nil
 }
 
-func (t *T2SModel) Process(input string, endFlag int) (output string, err error) {
+func (ps *PostSession) Process(input string, endFlag int) (output string, err error) {
 	var out *C.char
 	in := C.CString(input)
-	defer C.free(unsafe.Pointer(in)) // TODO
-	rec := C.T2sProcess(t.h, in, (C.int)(endFlag), &out)
+	defer C.free(unsafe.Pointer(in))
+	rec := C.T2sProcess(ps.h, in, (C.int)(endFlag), &out)
 	if rec != 0 {
 		return "", fmt.Errorf("T2SModel Process fail code:%d", rec)
 	}
 	return C.GoString(out), nil
 }
 
-func (t *T2SModel) Destroy() error {
-	rec := C.TerminateT2sInstance(&t.h)
-	if rec != 0 {
-		return fmt.Errorf("T2SModel TerminateT2sInstance fail code:%d", rec)
-	}
-	rec = C.UnloadT2sModel(&t.b)
+func (pb *PostBaseHandle) Destroy() error {
+	rec := C.UnloadT2sModel(&pb.b)
 	if rec != 0 {
 		return fmt.Errorf("T2SModel UnloadT2sModel fail code:%d", rec)
 	}
-	C.free(unsafe.Pointer(t.modelPath))
+	C.free(unsafe.Pointer(pb.modelPath))
 	return nil
 }
 
-func (t *T2SModel) LoadUserRules(userDictPath string, size int) error {
-	t.userDictPath = C.CString(userDictPath)
-	t.size = C.int(size)
-	rec := C.LoadUserRules(t.userDictPath, t.size, t.h)
+func (pb *PostSession) Reset() error {
+	rec := C.T2sReset(&pb.h)
 	if rec != 0 {
-		return fmt.Errorf("T2SModel LoadUserRules fail code:%d", rec)
+		return fmt.Errorf("T2SModel Reset fail code:%d", rec)
 	}
 	return nil
 }
-
-func (t *T2SModel) UnLoadUserRules() error {
-	rec := C.UnloadUserRules(t.h)
-	if rec != 0 {
-		return fmt.Errorf("T2SModel UnloadUserRules fail code:%d", rec)
-	}
-	return nil
-}
-
-func (t *T2SModel) GetVersion() string {
-	v := C.T2sGetVersion()
-	return C.GoString(v)
-}
-
-//func (t *T2SModel) MakeUserModel(inFile, outFile string) error {
-//	t.inFile = C.CString(inFile)
-//	t.outFile = C.CString(outFile)
-//	rec := C.MakeT2sModel(t.inFile, t.outFile)
-//	if rec != 0 {
-//		return fmt.Errorf("T2SModel MakeT2sModel fail code:%d", rec)
-//	}
-//	return nil
-//}

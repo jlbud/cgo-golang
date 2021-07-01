@@ -97,8 +97,19 @@ T2S_EXPORT T2S_ERRNO LoadUserRules(const char* data, int size, void* instance);
 T2S_EXPORT T2S_ERRNO UnloadUserRules(void* instance);
 
 /**
+ * @brief 后处理清空之前处理数据
+ * @param[in,out]  instance      实例
+ * @return T2S_ERROR_CODE
+ * @retval T2S_SUCCESS              操作成功
+ * @retval T2S_DATA_ERROR          参数错误
+ */
+T2S_EXPORT T2S_ERRNO T2sReset(void* instance);
+
+/**
  * @brief 基于模型的分词处理
+ * @param[in]  instance      实例
  * @param[in]  input      输入字符串
+ * @param[in]  end_flag   回话结束标志
  * @param[out] output     分词结果
  * @return T2S_ERROR_CODE
  * @retval T2S_SUCCESS              操作成功
