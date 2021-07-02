@@ -53,8 +53,8 @@ func main() {
 	br := bufio.NewReader(f)
 	for {
 		output := ""
-		data, _, c := br.ReadLine()
-		if c == io.EOF {
+		data, _, err := br.ReadLine()
+		if err == io.EOF {
 			break
 		}
 		if len(data) == 0 {
